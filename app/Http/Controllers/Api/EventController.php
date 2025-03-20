@@ -15,9 +15,35 @@ class EventController extends Controller
      */
     public function index()
     {
+        // Starts query builder for the Event model.
+        $query = Event::query();
+        // Parameters allowed to be loaded.
+        $relations = ['user', 'attendees', 'attendees.user'];
+
+        foreach ($relations as $relation) {
+            $query->when(
+                $this->shouldIncludeRelation($relation),
+                fn($q) => $q->with($relation)
+            );
+        }
+
         return EventResource::collection(
-            Event::with('user')->paginate()
+            // Fetch most recent events.
+            $query->latest()->paginate()
         );
+    }
+
+    protected function shouldIncludeRelation(string $relation): bool
+    {
+        $include = request()->query('include');
+
+        if (!$include) {
+            return false;
+        }
+
+        $relations = array_map('trim', explode(',', $include));
+
+        return in_array($relation, $relations);
     }
 
     /**
@@ -25,8 +51,6 @@ class EventController extends Controller
      */
     public function store(Request $request)
     {
-
-
         $event = Event::create([
             ...$request->validate([
                 'name' => 'required|string|max:255',
