@@ -75,10 +75,6 @@ class EventController extends Controller implements HasMiddleware
      */
     public function update(Request $request, Event $event)
     {
-        // if (Gate::denies('update-event', $event)) {
-        //     abort(403, 'You are not authorized to update this event.');
-        // }
-
         Gate::authorize('update-event', $event);
 
         $event->update(
