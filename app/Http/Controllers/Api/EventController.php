@@ -4,27 +4,24 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\EventResource;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use App\Http\Traits\CanLoadRelationships;
 use App\Models\Event;
 use Illuminate\Http\Request;
-use Illuminate\Routing\Controllers\HasMiddleware;
-use Illuminate\Routing\Controllers\Middleware;
-use Illuminate\Support\Facades\Gate;
 
-class EventController extends Controller implements HasMiddleware
+class EventController extends Controller
 {
 
     use CanLoadRelationships;
+    use AuthorizesRequests;
 
     // Parameters allowed to be loaded.
     private array $relations = ['user', 'attendees', 'attendees.user'];
 
-    public static function middleware(): array
+    public function __construct()
     {
-        return [
-            'auth:sanctum', // Applies to all methods by default
-            new middleware('auth:sanctum', except: ['index', 'show']), // Excludes 'index' and 'show' from 'auth:sanctum'
-        ];
+        $this->middleware('auth:sanctum')->except(['index', 'show']);
+        $this->authorizeResource(Event::class, 'event');
     }
 
     /**
@@ -75,7 +72,7 @@ class EventController extends Controller implements HasMiddleware
      */
     public function update(Request $request, Event $event)
     {
-        Gate::authorize('update-event', $event);
+        // Gate::authorize('update-event', $event);
 
         $event->update(
             $request->validate([
